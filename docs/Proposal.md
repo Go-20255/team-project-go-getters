@@ -5,7 +5,7 @@
 **Team Members:**
 
 * Jack Werremeyer
-* Nolan
+* Nolan Byer
 
 
 ## 1. Project Summary
