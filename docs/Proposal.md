@@ -20,16 +20,16 @@ The project will be organized into multiple components:
 
 ### Core Modules
 1. minesweeper/internal
-   * Contains the core game logic like mine placement, tile state, adjacency calculation)
+   * Contains the core game logic like mine placement, tile state, adjacency calculation
 2. minesweeper/controller
    * Controls player actions and keeps the current state of the board
 
 ### Simulation/System Modules
-3. game/world
-   * The minefield grid that handles tile generation, mine seeding, reveal propagation, and flag placement
-4. game/server
+3. game/board_gen
+   * The minefield grid that handles the visuals of tile generation, mine seeding, reveal propagation, and flag placement (calls clientGUI)
+4. game/game_loop
    * Multi-threaded Go server that runs the game loop and processes player input
-5. client/gui
+5. game/gui
    * GUI for visualizing the minefield and controlling the game
 
 ## 4. Testing Strategy

@@ -1,4 +1,4 @@
-package client
+package game
 
 
 import(
@@ -11,6 +11,15 @@ import(
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
+
+
+// LOCAL TYPES
+
+type Button struct {
+	x, y, w, h int
+	label       string
+	hovered     bool
+}
 
 
 func drawButton(screen *ebiten.Image, b *Button, clr color.RGBA, hover color.RGBA) {
