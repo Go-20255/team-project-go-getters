@@ -1,7 +1,7 @@
 # Minesweeper Proposal:
 **Team Members:**
 * Jack Werremeyer
-* Nolan
+* Nolan Byer
 
 ## 1. Project Summary
 Minesweeper is a single-player game where players uncover tiles on a grid while avoiding hidden mines. Players can flag suspected mines and use numerical clues to deduce safe tiles. Each revealed tile either shows a number indicating adjacent mines, is blank, or triggers a game-ending explosion.
