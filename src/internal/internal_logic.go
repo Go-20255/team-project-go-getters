@@ -15,14 +15,28 @@ func PlaceMines(tiles [][]Tile, width, height, count, avoidX, avoidY int) {
 	if count > width*height {
 		panic("Trying to initialize more mines than tiles")
 	}
-	for i := 0; i < count; i++ {
-		x := rand.Intn(width)
-		y := rand.Intn(height)
-		if tiles[x][y].HasMine || (x == avoidX && y == avoidY) {
-			i--
-		} else {
-			tiles[x][y].HasMine = true
+
+	coordinates := make([][]int, (width * height))
+	i := 0
+	j := 0
+	for pair := range coordinates {
+		coordinates[pair] = make([]int, 2)
+		coordinates[pair][0] = i
+		coordinates[pair][1] = j
+		i++
+		if i >= width {
+			j++
+			i = 0
 		}
+	}
+
+	for range count {
+		idx := rand.Intn(len(coordinates))
+		pair := coordinates[idx]
+		tiles[pair[0]][pair[1]].HasMine = true
+
+		coordinates[idx] = coordinates[len(coordinates)-1]
+		coordinates = coordinates[:len(coordinates)-1]
 	}
 }
 
