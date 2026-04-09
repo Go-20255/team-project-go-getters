@@ -75,5 +75,18 @@ func CountNeighborMines(tiles [][]Tile, tx, ty, width, height int) int {
 	return mineCount
 }
 
+// recursively reveal all adjacent tiles around tiles with 0 adjacent mines
 func FloodReveal(tiles [][]Tile, tx, ty, width, height int) {
+	if tiles[tx][ty].State == 1 { // avoid infinite loops of revealing already revealed tiles
+		return
+	}
+	tiles[tx][ty].State = 1 // reveal this tile
+	if tiles[tx][ty].AdjacentMines == 0 {
+		for i := max(0, tx-1); i <= min(width-1, tx+1); i++ {
+			for j := max(0, tx-1); j <= min(height-1, ty+1); j++ {
+				// this will iterate over the current tile, but that will be caught by the above return
+				FloodReveal(tiles, i, j, width, height)
+			}
+		}
+	}
 }
