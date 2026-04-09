@@ -11,18 +11,23 @@ const (
 	TileFlagged
 )
 
+// initialize `count` mines on a new board at random tiles,
+// with the exception of tile (`avoidX`, `avoidY`)
 func PlaceMines(tiles [][]Tile, width, height, count, avoidX, avoidY int) {
-	if count > width*height {
+	if count > width*height-1 {
 		panic("Trying to initialize more mines than tiles")
 	}
 
-	coordinates := make([][]int, (width * height))
+	// a 2d array of pairs of integers, representing tile coordinates
+	coordinates := make([][]int, (width*height)-1)
 	i := 0
 	j := 0
 	for pair := range coordinates {
-		coordinates[pair] = make([]int, 2)
-		coordinates[pair][0] = i
-		coordinates[pair][1] = j
+		if !(i == avoidX && j == avoidY) { // skip the avoided tile
+			coordinates[pair] = make([]int, 2)
+			coordinates[pair][0] = i
+			coordinates[pair][1] = j
+		}
 		i++
 		if i >= width {
 			j++
@@ -30,6 +35,8 @@ func PlaceMines(tiles [][]Tile, width, height, count, avoidX, avoidY int) {
 		}
 	}
 
+	// initialize a mine at a random coordinate and remove that
+	// from the list of available coordinates, repeat `count` times
 	for range count {
 		idx := rand.Intn(len(coordinates))
 		pair := coordinates[idx]
@@ -40,16 +47,20 @@ func PlaceMines(tiles [][]Tile, width, height, count, avoidX, avoidY int) {
 	}
 }
 
+// initialize each tile's `AdjacentMines` field
 func CalculateAdjacency(tiles [][]Tile, width, height int) {
 	for i := range tiles {
 		for j := range tiles[i] {
-			if !tiles[i][j].HasMine {
+			if !tiles[i][j].HasMine { // skip tiles with mines
 				tiles[i][j].AdjacentMines = CountNeighborMines(tiles, i, j, width, height)
 			}
 		}
 	}
 }
 
+// helper function for CalculateAdjacency, called for each tile.
+// Counts mines in the surrounding tiles, returns the total count.
+// Uses `min` and `max` to avoid out of bounds indexing
 func CountNeighborMines(tiles [][]Tile, tx, ty, width, height int) int {
 	mineCount := 0
 
