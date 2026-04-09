@@ -1,5 +1,8 @@
 package internal
 
+import (
+	"math/rand"
+)
 
 // Tile state constants
 const (
@@ -8,15 +11,43 @@ const (
 	TileFlagged
 )
 
-
 func PlaceMines(tiles [][]Tile, width, height, count, avoidX, avoidY int) {
+	if count > width*height {
+		panic("Trying to initialize more mines than tiles")
+	}
+	for i := 0; i < count; i++ {
+		x := rand.Intn(width)
+		y := rand.Intn(height)
+		if tiles[x][y].HasMine || (x == avoidX && y == avoidY) {
+			i--
+		} else {
+			tiles[x][y].HasMine = true
+		}
+	}
 }
 
 func CalculateAdjacency(tiles [][]Tile, width, height int) {
+	for i := range tiles {
+		for j := range tiles[i] {
+			if !tiles[i][j].HasMine {
+				tiles[i][j].AdjacentMines = CountNeighborMines(tiles, i, j, width, height)
+			}
+		}
+	}
 }
 
 func CountNeighborMines(tiles [][]Tile, tx, ty, width, height int) int {
-    return 0
+	mineCount := 0
+
+	for i := max(0, tx-1); i <= min(width-1, tx+1); i++ {
+		for j := max(0, ty-1); j <= min(height-1, ty+1); j++ {
+			if tiles[i][j].HasMine {
+				mineCount++
+			}
+		}
+	}
+
+	return mineCount
 }
 
 func FloodReveal(tiles [][]Tile, tx, ty, width, height int) {
