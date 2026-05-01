@@ -14,7 +14,7 @@ func NewController(width, height, mineCount int) *Controller {
 // mines, moves into the recursive FloodReveal
 func (c *Controller) RevealTile(tx, ty int) {
 	if c.Tiles[ty][tx].State == TileRevealed {
-		panic("Cannot reveal already revealed tile")
+		return // do nothing, tile is already revealed
 	}
 	if c.Tiles[ty][tx].HasMine {
 		c.GameOver = true
@@ -37,7 +37,7 @@ func (c *Controller) FlagTile(tx, ty int) {
 }
 
 // Resets all values of the controller.
-// NOTE: `GenerateGrid()` has to be called after this to make Tiles
+// NOTE: `GenerateGrid()` has to be called after this to remake Tiles
 func (c *Controller) Reset() {
 	c.GameOver = false
 	c.GameWon = false
