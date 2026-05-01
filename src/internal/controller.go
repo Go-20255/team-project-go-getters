@@ -25,9 +25,15 @@ func (c *Controller) RevealTile(tx, ty int) {
 	c.Tiles[ty][tx].State = TileRevealed
 }
 
-// sets the specified tile to the `flagged` state
+// sets the specified tile to the `flagged` state,
+// OR un-flags an already flagged tile.
 func (c *Controller) FlagTile(tx, ty int) {
-	c.Tiles[ty][tx].State = TileFlagged
+	switch c.Tiles[ty][tx].State {
+	case TileHidden:
+		c.Tiles[ty][tx].State = TileFlagged
+	case TileFlagged:
+		c.Tiles[ty][tx].State = TileHidden
+	}
 }
 
 // Resets all values of the controller.
