@@ -5,6 +5,10 @@ import (
 	"time"
 
 	"image/color"
+	"embed"
+    "image"
+    _ "image/png"
+    "bytes"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -15,6 +19,9 @@ import (
 	//"board_gen"
 )
 
+//for images
+//go:embed assets/*.png
+var numberAssets embed.FS
 // original palette
 // maybe have mult pallettes in the furture? idk...
 var (
@@ -47,9 +54,44 @@ func NewGUI(bg *BoardGen, width, height int) *GUI {
 		TopBorder: 60,
 		SideBorder: 10,
 		StartTime: time.Now(),
+		NumImages: loadNumberImages(),
+		FlagImage: loadSprite("assets/flag.png"),
+        BombImage: loadSprite("assets/bomb.png"),
 	}
 }
 
+// for loading bomb and flag
+func loadSprite(path string) *ebiten.Image {
+    data, err := numberAssets.ReadFile(path)
+    if err != nil {
+        panic(fmt.Sprintf("failed to read %s: %v", path, err))
+    }
+    img, _, err := image.Decode(bytes.NewReader(data))
+    if err != nil {
+        panic(fmt.Sprintf("failed to decode %s: %v", path, err))
+    }
+    return ebiten.NewImageFromImage(img)
+}
+
+
+//load images for minesweeper in GUI with  a map
+
+func loadNumberImages() [9]*ebiten.Image {
+    var imgs [9]*ebiten.Image
+    for i := 1; i <= 8; i++ {
+        path := fmt.Sprintf("assets/%d.png", i)
+        data, err := numberAssets.ReadFile(path)
+        if err != nil {
+            panic(fmt.Sprintf("failed to read %s: %v", path, err))
+        }
+        img, _, err := image.Decode(bytes.NewReader(data))
+        if err != nil {
+            panic(fmt.Sprintf("failed to decode %s: %v", path, err))
+        }
+        imgs[i] = ebiten.NewImageFromImage(img)
+    }
+    return imgs
+}
 //mouse input
 func (g *GUI) Update() error {
 	mx, my := ebiten.CursorPosition()
@@ -87,7 +129,7 @@ func (g *GUI) Update() error {
 
 //renders every tile on the board each frame
 func (g *GUI) Draw(screen *ebiten.Image) {
-	screen.Fill(color.RGBA{50, 50, 50, 255}) //bg
+	screen.Fill(colorRevealed) //bg
 
 	//draw border/ timers and such
 	g.drawHUD(screen)
@@ -143,56 +185,50 @@ func (g *GUI) Layout(outsideWidth, outsideHeight int) (int, int) {
 
 // drawTile renders a single tile at given pos
 func (g *GUI) drawTile(screen *ebiten.Image, tx, ty int) {
-	tile := g.BoardGen.Controller.GetTile(tx, ty)
-	px, py := g.BoardGen.TileToPixel(tx, ty)
-	size := float32(g.BoardGen.TileSize)
+    tile := g.BoardGen.Controller.GetTile(tx, ty)
+    px, py := g.BoardGen.TileToPixel(tx, ty)
+    size := float32(g.BoardGen.TileSize)
 
-	//shifting tiles to align borders
-	px += g.SideBorder
+    px += g.SideBorder
     py += g.TopBorder
 
-	//fill color
-	var fill color.RGBA
-	switch tile.State {
-	case internal.TileHidden:
-		fill = colorHidden
-	case internal.TileFlagged:
-		fill = colorFlagged
-	case internal.TileRevealed:
-		if tile.HasMine {
-			fill = colorMine
-		} else {
-			fill = colorRevealed
-		}
-	}
+    var fill color.RGBA
+    switch tile.State {
+    case internal.TileHidden:
+        fill = colorHidden
+    case internal.TileFlagged:
+        fill = colorHidden 
+        // if tile.HasMine {
+        //     fill = colorRevealed 
+        // }
+    }
 
-	// Fill
-	vector.FillRect(
-		screen,
-		float32(px)+1, float32(py)+1,
-		size-2, size-2,
-		fill, false,
-	)
+    vector.FillRect(screen, float32(px)+1, float32(py)+1, size-2, size-2, fill, false)
+    vector.StrokeRect(screen, float32(px), float32(py), size, size, 1, colorBorder, false)
 
-	// Border
-	vector.StrokeRect(
-		screen,
-		float32(px), float32(py),
-		size, size,
-		1, colorBorder, false,
-	)
+    //sprite overlay helper
+    drawSprite := func(img *ebiten.Image) {
+        if img == nil {
+            return
+        }
+        imgW, imgH := img.Bounds().Dx(), img.Bounds().Dy()
+        op := &ebiten.DrawImageOptions{}
+        centerX := float64(px) + float64(g.BoardGen.TileSize-imgW)/2
+        centerY := float64(py) + float64(g.BoardGen.TileSize-imgH)/2
+        op.GeoM.Translate(centerX, centerY)
+        screen.DrawImage(img, op)
+    }
 
-	// Num overlay
-	if tile.State == internal.TileRevealed && !tile.HasMine {
-		g.drawMineCount(screen, tx, ty)
-	}
-
-	//flag symbl
-	if tile.State == internal.TileFlagged {
-		cx := px + g.BoardGen.TileSize/2
-		cy := py + g.BoardGen.TileSize/2
-		ebitenutil.DebugPrintAt(screen, "F", cx-3, cy-4)
-	}
+    switch tile.State {
+    case internal.TileRevealed:
+        if tile.HasMine {
+            drawSprite(g.BombImage)
+        } else {
+            g.drawMineCount(screen, tx, ty)
+        }
+    case internal.TileFlagged:
+        drawSprite(g.FlagImage)
+    }
 }
 
 //  renders the adjacent-mine digit inside a revealed tile
@@ -202,16 +238,24 @@ func (g *GUI) drawMineCount(screen *ebiten.Image, tx, ty int) {
 		return
 	}
 
+	img := g.NumImages[tile.AdjacentMines]
+	//fmt.Printf("drawing %d at tile %d,%d, img nil: %v\n", tile.AdjacentMines, tx, ty, img == nil)
+    if img == nil {
+        return
+    }
+	
+
 	px, py := g.BoardGen.TileToPixel(tx, ty)
 	px += g.SideBorder
     py += g.TopBorder
-	label := fmt.Sprintf("%d", tile.AdjacentMines)
 
-	// Centre the single character kinda within the tile
-	offsetX := g.BoardGen.TileSize/2 - 3
-	offsetY := g.BoardGen.TileSize/2 - 4
+	imgW, imgH := img.Bounds().Dx(), img.Bounds().Dy()
 
-	// ebitenutil.DebugPrintAt doesn't support custom colors, so using temp image tinted to the correct number color, then composite it.
-	_ = mineCountColors[tile.AdjacentMines] // apparently this can be used to render custom colored text... Idk if I want to do this yet
-	ebitenutil.DebugPrintAt(screen, label, px+offsetX, py+offsetY)
+    op := &ebiten.DrawImageOptions{}
+    // Center the image on the tile
+    centerX := float64(px) + float64(g.BoardGen.TileSize-imgW)/2
+    centerY := float64(py) + float64(g.BoardGen.TileSize-imgH)/2
+    op.GeoM.Translate(centerX, centerY)
+
+	screen.DrawImage(img, op)
 }

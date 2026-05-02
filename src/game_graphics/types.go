@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	//"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2"
 	// "github.com/hajimehoshi/ebiten/v2/colorm"
 	// "github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	// "github.com/hajimehoshi/ebiten/v2/vector"
@@ -26,6 +26,9 @@ type GUI struct {
 	TopBorder int
 	SideBorder int
 	StartTime time.Time
+	NumImages [9]*ebiten.Image
+	FlagImage *ebiten.Image
+    BombImage *ebiten.Image
 }
 
 
