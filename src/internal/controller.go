@@ -25,6 +25,7 @@ func (c *Controller) RevealTile(tx, ty int) {
 	c.Tiles[ty][tx].State = TileRevealed
 }
 
+
 // sets the specified tile to the `flagged` state,
 // OR un-flags an already flagged tile.
 func (c *Controller) FlagTile(tx, ty int) {
@@ -42,7 +43,6 @@ func (c *Controller) Reset() {
 	c.GameOver = false
 	c.GameWon = false
 	c.FirstMove = true
-	c.Tiles = nil
 }
 
 // is the game over?

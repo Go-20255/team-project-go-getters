@@ -67,8 +67,7 @@ func (gl *GameLoop) processInput(e InputEvent) {
         }
 
     case Restart:
-        gl.BoardGen.Controller.Reset()
-        gl.BoardGen.GenerateGrid()
+        gl.BoardGen.Reset()
 
     case Quit:
         close(gl.QuitChan)

@@ -55,13 +55,14 @@ func (g *GUI) Update() error {
 	mx, my := ebiten.CursorPosition()
 
 	//reset button check
-	rawMx, rawMy := ebiten.CursorPosition()
     btnX, btnY := g.Width-60, 10
-    if rawMx >= btnX && rawMx <= btnX+50 && rawMy >= btnY && rawMy <= btnY+30 {
-        //g.BoardGen.Reset()
-        g.StartTime = time.Now()
-        return nil
-    }
+	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		if mx >= btnX && mx <= btnX+50 && my >= btnY && my <= btnY+30 {
+			g.BoardGen.Reset()
+			g.StartTime = time.Now()
+			return nil
+    	}
+	}
 
 	//get rid of border offset
 	mx -= g.SideBorder
@@ -120,10 +121,10 @@ func (g *GUI) drawHUD(screen *ebiten.Image) {
 	ebitenutil.DebugPrintAt(screen, timerStr, 10, 20)
 
 	// counter of remaining flags
-	ctrl := g.BoardGen.Controller
-	flagStr := fmt.Sprintf("Mines %d", ctrl.MineCount)
-	ebitenutil.DebugPrintAt(screen, flagStr, g.Width/2-20, 20)
-
+	remaining := g.BoardGen.Controller.MineCount - g.BoardGen.FlagsPlaced()
+	flagStr := fmt.Sprintf("Flags Remaining: %d", remaining)
+	ebitenutil.DebugPrintAt(screen, flagStr, g.Width/2-50, 20)
+	
 	btnX, btnY := g.Width-60, 10
     vector.FillRect(screen,
         float32(btnX), float32(btnY), 50, 30,
@@ -131,13 +132,6 @@ func (g *GUI) drawHUD(screen *ebiten.Image) {
     )
     ebitenutil.DebugPrintAt(screen, "Reset", btnX+8, btnY+10)
 }
-
-
-
-
-
-
-
 
 
 // Layout returns the logical screen dimensions
@@ -173,7 +167,7 @@ func (g *GUI) drawTile(screen *ebiten.Image, tx, ty int) {
 	}
 
 	// Fill
-	vector.DrawFilledRect(
+	vector.FillRect(
 		screen,
 		float32(px)+1, float32(py)+1,
 		size-2, size-2,
@@ -209,6 +203,8 @@ func (g *GUI) drawMineCount(screen *ebiten.Image, tx, ty int) {
 	}
 
 	px, py := g.BoardGen.TileToPixel(tx, ty)
+	px += g.SideBorder
+    py += g.TopBorder
 	label := fmt.Sprintf("%d", tile.AdjacentMines)
 
 	// Centre the single character kinda within the tile

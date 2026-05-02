@@ -45,6 +45,19 @@ func (bg *BoardGen) PropagateReveal(tx, ty int) {
 	bg.Controller.RevealTile(tx, ty)
 }
 
+//used for HUD on amt of flags placed so far
+func (bg *BoardGen) FlagsPlaced() int{
+	count := 0
+	for y := 0; y < bg.Controller.Height; y++{
+		for x := 0; x < bg.Controller.Width; x++{
+			if bg.Controller.Tiles[y][x].State == internal.TileFlagged {
+				count++
+			}
+		}
+	}
+	return count
+}
+
 func (bg *BoardGen) PlaceFlag(tx, ty int) {
 	if bg.Controller.IsGameOver() || bg.Controller.IsGameWon() {
 		return
@@ -62,4 +75,9 @@ func (bg *BoardGen) PixelToTile(px, py int) (int, int) {
 
 func (bg *BoardGen) InBounds(tx, ty int) bool {
 	return tx >= 0 && ty >= 0 && tx < bg.Controller.Width && ty < bg.Controller.Height
+}
+
+func (bg *BoardGen) Reset() {
+    bg.Controller.Reset()
+    bg.GenerateGrid()
 }
