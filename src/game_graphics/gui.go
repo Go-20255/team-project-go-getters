@@ -2,6 +2,7 @@ package game_graphics
 
 import (
 	"fmt"
+	"time"
 
 	"image/color"
 
@@ -43,12 +44,28 @@ func NewGUI(bg *BoardGen, width, height int) *GUI {
 		BoardGen: bg,
 		Width:    width,
 		Height:   height,
+		TopBorder: 60,
+		SideBorder: 10,
+		StartTime: time.Now(),
 	}
 }
 
 //mouse input
 func (g *GUI) Update() error {
 	mx, my := ebiten.CursorPosition()
+
+	//reset button check
+	rawMx, rawMy := ebiten.CursorPosition()
+    btnX, btnY := g.Width-60, 10
+    if rawMx >= btnX && rawMx <= btnX+50 && rawMy >= btnY && rawMy <= btnY+30 {
+        //g.BoardGen.Reset()
+        g.StartTime = time.Now()
+        return nil
+    }
+
+	//get rid of border offset
+	mx -= g.SideBorder
+    my -= g.TopBorder
 
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 		tx, ty := g.BoardGen.PixelToTile(mx, my)
@@ -71,6 +88,9 @@ func (g *GUI) Update() error {
 func (g *GUI) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{50, 50, 50, 255}) //bg
 
+	//draw border/ timers and such
+	g.drawHUD(screen)
+
 	ctrl := g.BoardGen.Controller
 	for ty := 0; ty < ctrl.Height; ty++ {
 		for tx := 0; tx < ctrl.Width; tx++ {
@@ -85,6 +105,41 @@ func (g *GUI) Draw(screen *ebiten.Image) {
 	}
 }
 
+
+func (g *GUI) drawHUD(screen *ebiten.Image) {
+
+	//top panel
+	vector.FillRect(screen, 0,0,
+		float32(g.Width), float32(g.TopBorder),
+		colorBorder, false,
+	)
+
+	//timer
+	elapsed := int(time.Since(g.StartTime).Seconds())
+	timerStr := fmt.Sprintf("Time: %03d", elapsed)
+	ebitenutil.DebugPrintAt(screen, timerStr, 10, 20)
+
+	// counter of remaining flags
+	ctrl := g.BoardGen.Controller
+	flagStr := fmt.Sprintf("Mines %d", ctrl.MineCount)
+	ebitenutil.DebugPrintAt(screen, flagStr, g.Width/2-20, 20)
+
+	btnX, btnY := g.Width-60, 10
+    vector.FillRect(screen,
+        float32(btnX), float32(btnY), 50, 30,
+        color.RGBA{180, 60, 60, 255}, false,
+    )
+    ebitenutil.DebugPrintAt(screen, "Reset", btnX+8, btnY+10)
+}
+
+
+
+
+
+
+
+
+
 // Layout returns the logical screen dimensions
 func (g *GUI) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return g.Width, g.Height
@@ -97,6 +152,10 @@ func (g *GUI) drawTile(screen *ebiten.Image, tx, ty int) {
 	tile := g.BoardGen.Controller.GetTile(tx, ty)
 	px, py := g.BoardGen.TileToPixel(tx, ty)
 	size := float32(g.BoardGen.TileSize)
+
+	//shifting tiles to align borders
+	px += g.SideBorder
+    py += g.TopBorder
 
 	//fill color
 	var fill color.RGBA

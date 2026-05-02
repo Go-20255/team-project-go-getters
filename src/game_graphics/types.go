@@ -4,6 +4,7 @@ import (
 	//"fmt"
 	//"image"
 	"sync"
+	"time"
 
 	//"github.com/hajimehoshi/ebiten/v2"
 	// "github.com/hajimehoshi/ebiten/v2/colorm"
@@ -22,6 +23,9 @@ type GUI struct {
 	BoardGen *BoardGen
 	Width    int
 	Height   int
+	TopBorder int
+	SideBorder int
+	StartTime time.Time
 }
 
 
