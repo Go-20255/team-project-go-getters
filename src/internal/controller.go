@@ -20,11 +20,29 @@ func (c *Controller) RevealTile(tx, ty int) {
 		c.GameOver = true
 	} else if c.Tiles[ty][tx].AdjacentMines == 0 {
 		FloodReveal(c.Tiles, tx, ty, c.Width, c.Height)
+		c.CheckGameWon()
 		return
 	}
 	c.Tiles[ty][tx].State = TileRevealed
+	c.CheckGameWon()
 }
 
+// small helper for RevealTile, determines if game is won
+// by comparing count of flagged + hidden tiles to total
+// mine count
+func (c *Controller) CheckGameWon() {
+	count := 0
+	for _, tileCol := range c.Tiles {
+		for _, tile := range tileCol {
+			if tile.State != TileRevealed {
+				count++
+			}
+		}
+	}
+	if count == c.MineCount {
+		c.GameWon = true
+	}
+}
 
 // sets the specified tile to the `flagged` state,
 // OR un-flags an already flagged tile.
